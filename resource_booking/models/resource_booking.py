@@ -14,12 +14,24 @@ from odoo.addons.resource.models.resource import Intervals
 
 
 def _availability_is_fitting(available_intervals, start_dt, end_dt):
+    start_date = start_dt.date()
+    end_date = end_dt.date()
     # Booking is uninterrupted on the same calendar day.
-    return (
+    if (
         len(available_intervals) == 1
         and available_intervals._items[0][0] <= start_dt
         and available_intervals._items[0][1] >= end_dt
-    )
+    ):
+        return True
+    # Booking spans more than one calendar day, e.g. from 23:00 to 1:00
+    # the next day.
+    elif (
+        available_intervals
+        and start_date != end_date
+        and (end_date - start_date).days == (len(available_intervals) - 1)
+    ):
+        return True
+    return False
 
 
 class ResourceBooking(models.Model):
