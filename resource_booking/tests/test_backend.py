@@ -95,6 +95,36 @@ class BackendCase(SavepointCase):
             }
         )
 
+    def test_scheduling_constraints_span_days(self):
+        # Booking can span across two calendar days.
+        cal_satsun = self.r_calendars[3]
+        rbc_satsun = self.rbcs[3]
+        self.rbt.resource_calendar_id = cal_satsun
+        self.env["resource.booking"].create(
+            {
+                "partner_id": self.partner.id,
+                "start": "2021-03-06 23:00:00",
+                "duration": 2,
+                "type_id": self.rbt.id,
+                "combination_id": rbc_satsun.id,
+                "combination_auto_assign": False,
+            }
+        )
+        # If there are too many minutes between the end and start of the two
+        # dates, the booking cannot be contiguous.
+        cal_satsun.attendance_ids[0].hour_to = 23.96  # 23:58
+        with self.assertRaises(ValidationError), self.env.cr.savepoint():
+            self.env["resource.booking"].create(
+                {
+                    "partner_id": self.partner.id,
+                    "start": "2021-03-20 23:00:00",
+                    "duration": 2,
+                    "type_id": self.rbt.id,
+                    "combination_id": rbc_satsun.id,
+                    "combination_auto_assign": False,
+                }
+            )
+
     def test_rbc_forced_calendar(self):
         # Type is available on Mondays
         cal_mon = self.r_calendars[0]
@@ -245,7 +275,7 @@ class BackendCase(SavepointCase):
 
     def test_sorted_assignment(self):
         """Set sorted assignment on RBT and test it works correctly."""
-        rbc_mon, rbc_tue, rbc_montue = self.rbcs
+        rbc_mon, rbc_tue, rbc_montue, rbc_satsun = self.rbcs
         with Form(self.rbt) as rbt_form:
             rbt_form.combination_assignment = "sorted"
         # Book next monday at 10:00
