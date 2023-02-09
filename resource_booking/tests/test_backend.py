@@ -110,6 +110,41 @@ class BackendCase(SavepointCase):
                 "combination_auto_assign": False,
             }
         )
+        # Booking cannot overlap.
+        with self.assertRaises(ValidationError), self.env.cr.savepoint():
+            self.env["resource.booking"].create(
+                {
+                    "partner_id": self.partner.id,
+                    "start": "2021-03-06 22:00:00",
+                    "duration": 4,
+                    "type_id": self.rbt.id,
+                    "combination_id": rbc_satsun.id,
+                    "combination_auto_assign": False,
+                }
+            )
+        # Test a case where there is an overlap, but the conflict happens at
+        # 00:00 exactly.
+        self.env["resource.booking"].create(
+            {
+                "partner_id": self.partner.id,
+                "start": "2021-03-14 00:00:00",
+                "duration": 1,
+                "type_id": self.rbt.id,
+                "combination_id": rbc_satsun.id,
+                "combination_auto_assign": False,
+            }
+        )
+        with self.assertRaises(ValidationError), self.env.cr.savepoint():
+            self.env["resource.booking"].create(
+                {
+                    "partner_id": self.partner.id,
+                    "start": "2021-03-13 23:00:00",
+                    "duration": 4,
+                    "type_id": self.rbt.id,
+                    "combination_id": rbc_satsun.id,
+                    "combination_auto_assign": False,
+                }
+            )
         # If there are too many minutes between the end and start of the two
         # dates, the booking cannot be contiguous.
         cal_satsun.attendance_ids[0].hour_to = 23.96  # 23:58

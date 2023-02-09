@@ -30,7 +30,19 @@ def _availability_is_fitting(available_intervals, start_dt, end_dt):
         and start_date != end_date
         and (end_date - start_date).days == (len(available_intervals) - 1)
     ):
-        return True
+        for item in available_intervals:
+            # Intervals that aren't on the end date should end at 23:59.
+            if item[1].date() != end_date and (
+                item[1].hour != 23 or item[1].minute != 59
+            ):
+                break
+            # Intervals that aren't on the start date should start at 00:00.
+            if item[0].date() != start_date and (
+                item[0].hour != 0 or item[0].minute != 0
+            ):
+                break
+        else:
+            return True
     return False
 
 
