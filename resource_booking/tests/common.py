@@ -39,6 +39,17 @@ def create_test_data(obj):
             0,
             0,
             {
+                "name": "Fridays",
+                "dayofweek": "4",
+                "hour_from": 0,
+                "hour_to": 23.99,
+                "day_period": "morning",
+            },
+        ),
+        (
+            0,
+            0,
+            {
                 "name": "Saturdays",
                 "dayofweek": "5",
                 "hour_from": 0,
@@ -63,7 +74,7 @@ def create_test_data(obj):
             {"name": "Mon", "attendance_ids": [attendances[0]], "tz": "UTC"},
             {"name": "Tue", "attendance_ids": [attendances[1]], "tz": "UTC"},
             {"name": "MonTue", "attendance_ids": attendances[0:2], "tz": "UTC"},
-            {"name": "SatSun", "attendance_ids": attendances[2:4], "tz": "UTC"},
+            {"name": "FriSun", "attendance_ids": attendances[2:], "tz": "UTC"},
         ]
     )
     # Create one material resource for each of those calendars; same order
