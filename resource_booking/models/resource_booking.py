@@ -25,12 +25,12 @@ def _availability_is_fitting(available_intervals, start_dt, end_dt):
         return True
     # Booking spans more than one calendar day, e.g. from 23:00 to 1:00
     # the next day.
-    elif (
-        available_intervals
-        and start_date != end_date
-        and (end_date - start_date).days == (len(available_intervals) - 1)
-    ):
+    elif available_intervals and start_date != end_date:
+        tally_date = start_date
         for item in available_intervals:
+            # Intervals that aren't on the running tally date break the streak.
+            if item[0].date() != tally_date or item[1].date() != tally_date:
+                break
             # Intervals that aren't on the end date should end at 23:59.
             if item[1].date() != end_date and (
                 item[1].hour != 23 or item[1].minute != 59
@@ -41,6 +41,8 @@ def _availability_is_fitting(available_intervals, start_dt, end_dt):
                 item[0].hour != 0 or item[0].minute != 0
             ):
                 break
+            # The next interval should be on the next day.
+            tally_date += timedelta(days=1)
         else:
             return True
     return False
