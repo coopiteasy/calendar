@@ -28,18 +28,22 @@ def _availability_is_fitting(available_intervals, start_dt, end_dt):
     elif available_intervals and start_date != end_date:
         tally_date = start_date
         for item in available_intervals:
+            item0_date = item[0].date()
+            item1_date = item[1].date()
+            # FIXME: Really weird workaround for when available_intervals has
+            # nonsensical items in it where item1_date is before item0_date.
+            # Just ignore those items and pretend they don't exist; all the
+            # other items appear to make sense.
+            if item1_date < item0_date:
+                continue
             # Intervals that aren't on the running tally date break the streak.
-            if item[0].date() != tally_date or item[1].date() != tally_date:
+            if item0_date != tally_date or item1_date != tally_date:
                 break
             # Intervals that aren't on the end date should end at 23:59.
-            if item[1].date() != end_date and (
-                item[1].hour != 23 or item[1].minute != 59
-            ):
+            if item1_date != end_date and (item[1].hour != 23 or item[1].minute != 59):
                 break
             # Intervals that aren't on the start date should start at 00:00.
-            if item[0].date() != start_date and (
-                item[0].hour != 0 or item[0].minute != 0
-            ):
+            if item0_date != start_date and (item[0].hour != 0 or item[0].minute != 0):
                 break
             # The next interval should be on the next day.
             tally_date += timedelta(days=1)
