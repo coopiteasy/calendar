@@ -697,7 +697,10 @@ class BackendCase(SavepointCase):
             }
         )
         rbc = self.env["resource.booking.combination"].create(
-            {"resource_ids": [(6, 0, [self.r_users[0].id, r_user_3.id])]}
+            {
+                "resource_ids": [(6, 0, [self.r_users[0].id, r_user_3.id])],
+                "type_rel_ids": [(6, 0, [self.rbt.id])],
+            }
         )
         self.env["resource.booking"].create(
             {
@@ -731,10 +734,16 @@ class BackendCase(SavepointCase):
             }
         )
         rbc_1 = self.env["resource.booking.combination"].create(
-            {"resource_ids": [(6, 0, [self.r_materials[0].id])]}
+            {
+                "resource_ids": [(6, 0, [self.r_materials[0].id])],
+                "type_rel_ids": [(6, 0, [self.rbt.id])],
+            }
         )
         rbc_2 = self.env["resource.booking.combination"].create(
-            {"resource_ids": [(6, 0, [self.r_users[0].id, r_user_3.id])]}
+            {
+                "resource_ids": [(6, 0, [self.r_users[0].id, r_user_3.id])],
+                "type_rel_ids": [(6, 0, [self.rbt.id])],
+            }
         )
         booking = self.env["resource.booking"].create(
             {
