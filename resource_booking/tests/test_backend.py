@@ -844,3 +844,33 @@ class BackendCase(SavepointCase):
                 utc.localize(datetime(2021, 3, 3, 11, 0)),
             )
         )
+
+    def test_resource_is_available_span_days(self):
+        # Correctly handle bookings that span across midnight.
+        cal_satsun = self.r_calendars[3]
+        rbc_satsun = self.rbcs[3]
+        resource = rbc_satsun.resource_ids[1]
+        self.rbt.resource_calendar_id = cal_satsun
+        self.env["resource.booking"].create(
+            {
+                "partner_id": self.partner.id,
+                "start": "2021-03-06 23:00:00",
+                "duration": 2,
+                "type_id": self.rbt.id,
+                "combination_id": rbc_satsun.id,
+                "combination_auto_assign": False,
+            }
+        )
+        self.assertFalse(
+            resource.is_available(
+                utc.localize(datetime(2021, 3, 6, 22, 0)),
+                utc.localize(datetime(2021, 3, 7, 2, 0)),
+            )
+        )
+        # Resource is available on the next weekend.
+        self.assertTrue(
+            resource.is_available(
+                utc.localize(datetime(2021, 3, 13, 22, 0)),
+                utc.localize(datetime(2021, 3, 14, 2, 0)),
+            )
+        )
