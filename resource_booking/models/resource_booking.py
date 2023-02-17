@@ -14,6 +14,21 @@ from odoo.addons.resource.models.resource import Intervals
 
 
 def _availability_is_fitting(available_intervals, start_dt, end_dt):
+    # Test whether the stretch between start_dt and end_dt is an uninterrupted
+    # stretch of time as determined by `available_intervals`.
+    #
+    # `available_intervals` is typically created by `_get_intervals()`, which in
+    # turn uses `calendar._work_intervals()`. It appears to be default upstream
+    # behaviour of `_work_intervals()` to create a (start_dt, end_dt, record)
+    # tuple for every day, where end_dt is at 23:59, and the next tuple's
+    # start_dt is at 00:00.
+    #
+    # Changing this upstream behaviour of `_work_intervals()` to return a
+    # _single_ tuple for any multi-day uninterrupted stretch of time would
+    # probably be preferable, but (1.) the code in `_work_intervals()` is
+    # unbelievably arcane, and (2.) changing this behaviour is extremely likely
+    # to cause bugs elsewhere. So instead, we account for the upstream behaviour
+    # here.
     start_date = start_dt.date()
     end_date = end_dt.date()
     # Booking is uninterrupted on the same calendar day.
@@ -39,10 +54,12 @@ def _availability_is_fitting(available_intervals, start_dt, end_dt):
             # Intervals that aren't on the running tally date break the streak.
             if item0_date != tally_date or item1_date != tally_date:
                 break
-            # Intervals that aren't on the end date should end at 23:59.
+            # Intervals that aren't on the end date should end at 23:59 (and any
+            # number of seconds).
             if item1_date != end_date and (item[1].hour != 23 or item[1].minute != 59):
                 break
-            # Intervals that aren't on the start date should start at 00:00.
+            # Intervals that aren't on the start date should start at 00:00 (and
+            # any number of seconds).
             if item0_date != start_date and (item[0].hour != 0 or item[0].minute != 0):
                 break
             # The next interval should be on the next day.
