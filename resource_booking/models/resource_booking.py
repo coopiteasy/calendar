@@ -52,6 +52,8 @@ def _availability_is_fitting(available_intervals, start_dt, end_dt):
             if item1_date < item0_date:
                 continue
             # Intervals that aren't on the running tally date break the streak.
+            # This check is for malformed data in `available_intervals` where a
+            # day is skipped.
             if item0_date != tally_date or item1_date != tally_date:
                 break
             # Intervals that aren't on the end date should end at 23:59 (and any

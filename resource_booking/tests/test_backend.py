@@ -11,6 +11,11 @@ from odoo import fields
 from odoo.exceptions import ValidationError
 from odoo.tests.common import Form, SavepointCase, new_test_user
 
+from odoo.addons.resource.models.resource import Intervals
+from odoo.addons.resource_booking.models.resource_booking import (
+    _availability_is_fitting,
+)
+
 from .common import create_test_data
 
 _2dt = fields.Datetime.to_datetime
@@ -174,6 +179,35 @@ class BackendCase(SavepointCase):
                 "combination_id": rbc_frisun.id,
                 "combination_auto_assign": False,
             }
+        )
+
+    def test_availability_is_fitting_malformed_date_skip(self):
+        """Test a case for malformed data where a date is skipped in the
+        available_intervals list of tuples.
+        """
+        recset = self.env["resource.booking"]
+        tuples = [
+            (datetime(2021, 3, 1, 18, 0), datetime(2021, 3, 1, 23, 59), recset),
+            (datetime(2021, 3, 2, 0, 0), datetime(2021, 3, 2, 23, 59), recset),
+            (datetime(2021, 3, 3, 0, 0), datetime(2021, 3, 3, 18, 0), recset),
+        ]
+        available_intervals = Intervals(tuples)
+        self.assertTrue(
+            _availability_is_fitting(
+                available_intervals,
+                datetime(2021, 3, 1, 18, 0),
+                datetime(2021, 3, 3, 18, 0),
+            )
+        )
+        # Skip a day by removing it.
+        tuples.pop(1)
+        available_intervals = Intervals(tuples)
+        self.assertFalse(
+            _availability_is_fitting(
+                available_intervals,
+                datetime(2021, 3, 1, 18, 0),
+                datetime(2021, 3, 3, 18, 0),
+            )
         )
 
     def test_rbc_forced_calendar(self):
